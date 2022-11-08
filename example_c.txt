@@ -1,4 +1,5 @@
 /*
+* from : https://github.com/maximkulkin/esp-homekit-demo/blob/master/examples/led_strip_animation/led_strip_animation.c#:~:text=maximkulkin,esp%2Dhomekit%2Ddemo
 * This is an example of an rgb ws2812_i2s led strip animation using a WS2812FX library fork for freertos
 *
 * NOTE:
