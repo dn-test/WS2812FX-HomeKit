@@ -17,22 +17,18 @@ bool received_sat = false;
 bool received_hue = false;
 
 bool is_on = false;
-float current_brightness =  100.0;
+float current_brightness =  50.0;
 float current_sat = 0.0;
 float current_hue = 0.0;
 int rgb_colors[3];
 
-extern const char index_html[];
-extern const char main_js[];
-
-//#define WIFI_SSID ""
-//#define WIFI_PASSWORD ""
+//SSID & Passwd setup
 #include "secrets.h"
 
-//#define STATIC_IP                       // uncomment for static IP, set IP below
+#define STATIC_IP                       // uncomment for static IP, set IP below
 #ifdef STATIC_IP
   IPAddress ip(192,168,105,195);
-  IPAddress gateway(192,168,0,1);
+  IPAddress gateway(192,168,0,19);
   IPAddress subnet(255,255,255,0);
 #endif
 
@@ -83,7 +79,6 @@ void setup(){
   pinMode(INT_LED_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(INT_LED_PIN, IntLedState);
-  //digitalWrite(LED_PIN, IntLedState);
 
   Serial.println("Wifi setup");
   wifi_setup();
@@ -93,6 +88,18 @@ void setup(){
   Serial.println("ready!");
 }
 
+/*
+ * Build <li> string for all modes.
+ */
+void modes_setup() {
+  modes = "";
+  uint8_t num_modes = sizeof(myModes) > 0 ? sizeof(myModes) : ws2812fx.getModeCount();
+  for(uint8_t i=0; i < num_modes; i++) {
+    uint8_t m = sizeof(myModes) > 0 ? myModes[i] : i;
+    modes += ws2812fx.getModeName(m);
+    modes += ";";
+  }
+}
 
 //==============================
 // HomeKit setup and loop
@@ -154,7 +161,6 @@ void set_sat(const homekit_value_t v) {
     received_sat = true;
     
     updateColor();
-
 }
 
 void set_bright(const homekit_value_t v) {
@@ -210,6 +216,7 @@ void updateColor()
 
 void my_homekit_loop() {
 	arduino_homekit_loop();
+	
 	const uint32_t t = millis();
 	if (t > next_heap_millis) {
 		// show heap info every 5 seconds
@@ -286,7 +293,6 @@ int time_check() {
    return ledstatus;
 }
 
-
 /*
  * Connect to WiFi. If no connection is made within WIFI_TIMEOUT, ESP gets resettet.
  */
@@ -325,19 +331,4 @@ void wifi_setup() {
 
   IntLedState = LOW || time_check();
   digitalWrite(INT_LED_PIN, IntLedState);
-}
-
-
-/*
- * Build <li> string for all modes.
- */
-void modes_setup() {
-  modes = "";
-  uint8_t num_modes = sizeof(myModes) > 0 ? sizeof(myModes) : ws2812fx.getModeCount();
-  for(uint8_t i=0; i < num_modes; i++) {
-    uint8_t m = sizeof(myModes) > 0 ? myModes[i] : i;
-    modes += "<li><a href='#'>";
-    modes += ws2812fx.getModeName(m);
-    modes += "</a></li>";
-  }
 }
