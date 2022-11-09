@@ -21,10 +21,10 @@ float current_brightness =  50.0;
 float current_sat = 0.0;
 float current_hue = 0.0;
 
+bool fx_on = true;
 float fx_hue = 64;              // hue is scaled 0 to 360
 float fx_saturation = 50;       // saturation is scaled 0 to 100
 float fx_brightness = 50;       // brightness is scaled 0 to 100
-bool fx_on = true;
 
 //SSID & Passwd setup
 #include "secrets.h"
@@ -148,10 +148,13 @@ void fx_on_set(homekit_value_t value) {
     fx_on = value.bool_value;
     
     if (fx_on) {
-        WS2812FX.setMode(fx_hue);
+        //WS2812FX.setMode(fx_hue);
     } else {
-        WS2812FX.setMode(0);
+        //WS2812FX.setMode(0);
+		fx_hue = 0;
     }
+	
+	updateColor();
 }
 
 void fx_set_bright(homekit_value_t value) {
@@ -163,13 +166,15 @@ void fx_set_bright(homekit_value_t value) {
     
     if (fx_brightness > 50) {
         uint8_t fx_speed = fx_brightness - 50;
-        WS2812FX.setSpeed(fx_speed*5.1);
+        //WS2812FX.setSpeed(fx_speed*5.1);
         //WS2812FX_setInverted(true);
     } else {
         uint8_t fx_speed = abs(fx_brightness - 51);
-        WS2812FX.setSpeed(fx_speed*5.1);
+        //WS2812FX.setSpeed(fx_speed*5.1);
         //WS2812FX_setInverted(false);
     }
+	
+	updateColor();
 }
 
 void fx_set_hue(homekit_value_t value) {
@@ -179,7 +184,9 @@ void fx_set_hue(homekit_value_t value) {
     }
     fx_hue = value.float_value;
     
-    WS2812FX.setMode(fx_hue);
+    //WS2812FX.setMode(fx_hue);
+	
+	updateColor();
 }
 
 void fx_set_sat(homekit_value_t value) {
@@ -243,7 +250,7 @@ void updateColor()
 {
   if(is_on)
   {
-	  ws2812fx.setSpeed(0);
+	  WS2812FX.setSpeed(0);
    
       if(received_hue && received_sat)
       {
@@ -251,7 +258,7 @@ void updateColor()
 		
         uint32_t tmp = (uint32_t) current_hue;
         if(tmp <= 0xFFFFFF) {
-          ws2812fx.setColor(tmp);
+          WS2812FX.setColor(tmp);
         }		
         received_hue = false;
         received_sat = false;
@@ -260,15 +267,20 @@ void updateColor()
       int b = map(current_brightness,0, 100,75, 255);
 	  
 	  uint8_t tmp = (uint8_t) b;
-      ws2812fx.setBrightness(tmp);
+      WS2812FX.setBrightness(tmp);
 
       /*uint8_t tmp = (uint8_t) strtol(server.arg(i).c_str(), NULL, 10);
-      uint8_t new_mode = sizeof(myModes) > 0 ? myModes[tmp % sizeof(myModes)] : tmp % ws2812fx.getModeCount();
-      ws2812fx.setMode(new_mode);
+      uint8_t new_mode = sizeof(myModes) > 0 ? myModes[tmp % sizeof(myModes)] : tmp % WS2812FX.getModeCount();
+      WS2812FX.setMode(new_mode);
       auto_cycle = false;*/
-
+	  
+	  uint8_t new_mode = sizeof(myModes) > 0 ? myModes[fx_hue % sizeof(myModes)] : fx_hue % WS2812FX.getModeCount();
+	  WS2812FX.setMode(new_mode);
+      auto_cycle = false;
+	  
       /*uint16_t tmp = (uint16_t) strtol(server.arg(i).c_str(), NULL, 10);
-      ws2812fx.setSpeed(tmp);*/
+      WS2812FX.setSpeed(tmp);*/
+	  WS2812FX.setSpeed(fx_speed*5.1);
 
     }
   else if(!is_on) //lamp - switch to off
