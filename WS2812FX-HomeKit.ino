@@ -40,7 +40,7 @@ int rgb_colors[3];
 #define INT_LED_PIN 2
 #define LED_COUNT 59
 
-int IntLedState = HIGH;
+int IntLedState = LOW;		// Onboard led will be on until wifi will connect.
 int led_off_hour = 22;
 int led_on_hour = 9;
 
@@ -113,6 +113,11 @@ extern "C" homekit_characteristic_t cha_bright;
 extern "C" homekit_characteristic_t cha_sat;
 extern "C" homekit_characteristic_t cha_hue;
 
+extern "C" homekit_characteristic_t fx_on;
+extern "C" homekit_characteristic_t fx_bright;
+extern "C" homekit_characteristic_t fx_sat;
+extern "C" homekit_characteristic_t fx_hue;
+
 static uint32_t next_heap_millis = 0;
 
 void my_homekit_setup() {
@@ -122,9 +127,66 @@ void my_homekit_setup() {
   cha_sat.setter = set_sat;
   cha_hue.setter = set_hue;
   
+  fx_on.setter = fx_set_on;
+  fx_bright.setter = fx_set_bright;
+  fx_sat.setter = fx_set_sat;
+  fx_hue.setter = fx_set_hue;
+  
   arduino_homekit_setup(&accessory_config);
 
 }
+
+void fx_on_set(homekit_value_t value) {
+    if (value.format != homekit_format_bool) {
+        // printf("Invalid on-value format: %d\n", value.format);
+        return;
+    }
+    fx_on = value.bool_value;
+    
+    if (fx_on) {
+        WS2812FX.setMode(fx_hue);
+    } else {
+        WS2812FX.setMode(0);
+    }
+}
+
+void fx_set_bright(homekit_value_t value) {
+    if (value.format != homekit_format_int) {
+        // printf("Invalid brightness-value format: %d\n", value.format);
+        return;
+    }
+    fx_brightness = value.int_value;
+    
+    if (fx_brightness > 50) {
+        uint8_t fx_speed = fx_brightness - 50;
+        WS2812FX.setSpeed(fx_speed*5.1);
+        //WS2812FX_setInverted(true);
+    } else {
+        uint8_t fx_speed = abs(fx_brightness - 51);
+        WS2812FX.setSpeed(fx_speed*5.1);
+        //WS2812FX_setInverted(false);
+    }
+}
+
+void fx_set_hue(homekit_value_t value) {
+    if (value.format != homekit_format_float) {
+        // printf("Invalid hue-value format: %d\n", value.format);
+        return;
+    }
+    fx_hue = value.float_value;
+    
+    WS2812FX.setMode(fx_hue);
+}
+
+void fx_set_sat(homekit_value_t value) {
+    if (value.format != homekit_format_float) {
+        // printf("Invalid hue-value format: %d\n", value.format);
+        return;
+    }
+    fx_saturation = value.float_value;    
+}
+
+
 
 void set_on(const homekit_value_t v) {
     bool on = v.bool_value;
@@ -295,6 +357,7 @@ int time_check() {
 
 /*
  * Connect to WiFi. If no connection is made within WIFI_TIMEOUT, ESP gets resettet.
+ * Also if no connection the onboard led will go on.
  */
 void wifi_setup() {
   Serial.println();
@@ -311,7 +374,7 @@ void wifi_setup() {
   while(WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-    IntLedState = HIGH;
+    IntLedState = LOW;
     digitalWrite(INT_LED_PIN, IntLedState);
 
     if(millis() - connect_start > WIFI_TIMEOUT) {
@@ -329,6 +392,6 @@ void wifi_setup() {
   Serial.println(WiFi.localIP());
   Serial.println();
 
-  IntLedState = LOW || time_check();
+  IntLedState = HIGH || time_check();
   digitalWrite(INT_LED_PIN, IntLedState);
 }
