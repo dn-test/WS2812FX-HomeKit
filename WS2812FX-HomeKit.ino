@@ -154,7 +154,7 @@ void fx_on_set(homekit_value_t value) {
 		fx_hue = 0;
     }
 	
-	updateColor();
+    updateColor();
 }
 
 void fx_set_bright(homekit_value_t value) {
@@ -174,7 +174,7 @@ void fx_set_bright(homekit_value_t value) {
         //WS2812FX_setInverted(false);
     }
 	
-	updateColor();
+    updateColor();
 }
 
 void fx_set_hue(homekit_value_t value) {
@@ -186,7 +186,7 @@ void fx_set_hue(homekit_value_t value) {
     
     //WS2812FX.setMode(fx_hue);
 	
-	updateColor();
+    updateColor();
 }
 
 void fx_set_sat(homekit_value_t value) {
@@ -194,7 +194,8 @@ void fx_set_sat(homekit_value_t value) {
         // printf("Invalid hue-value format: %d\n", value.format);
         return;
     }
-    fx_saturation = value.float_value;    
+    fx_saturation = value.float_value;
+    updateColor();
 }
 
 
@@ -274,13 +275,13 @@ void updateColor()
       WS2812FX.setMode(new_mode);
       auto_cycle = false;*/
 	  
-	  uint8_t new_mode = sizeof(myModes) > 0 ? myModes[fx_hue % sizeof(myModes)] : fx_hue % WS2812FX.getModeCount();
-	  WS2812FX.setMode(new_mode);
+      uint8_t new_mode = sizeof(myModes) > 0 ? myModes[fx_hue % sizeof(myModes)] : fx_hue % WS2812FX.getModeCount();
+      WS2812FX.setMode(new_mode);
       auto_cycle = false;
 	  
       /*uint16_t tmp = (uint16_t) strtol(server.arg(i).c_str(), NULL, 10);
       WS2812FX.setSpeed(tmp);*/
-	  WS2812FX.setSpeed(fx_speed*5.1);
+      WS2812FX.setSpeed(fx_speed*5.1);
 
     }
   else if(!is_on) //lamp - switch to off
