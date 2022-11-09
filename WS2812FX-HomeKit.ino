@@ -97,10 +97,10 @@ void setup(){
  */
 void modes_setup() {
   modes = "";
-  uint8_t num_modes = sizeof(myModes) > 0 ? sizeof(myModes) : ws2812fx.getModeCount();
+  uint8_t num_modes = sizeof(myModes) > 0 ? sizeof(myModes) : WS2812FX.getModeCount();
   for(uint8_t i=0; i < num_modes; i++) {
     uint8_t m = sizeof(myModes) > 0 ? myModes[i] : i;
-    modes += ws2812fx.getModeName(m);
+    modes += WS2812FX.getModeName(m);
     modes += ";";
   }
 }
@@ -288,8 +288,8 @@ void updateColor()
   {
       Serial.println("is_on == false");
 	  
-	  ws2812fx.setBrightness(0);
-      ws2812fx.setColor(0x000000);
+	  WS2812FX.setBrightness(0);
+      WS2812FX.setColor(0x000000);
   }
 }
 
