@@ -22,6 +22,17 @@ float current_sat = 0.0;
 float current_hue = 0.0;
 int rgb_colors[3];
 
+float led_hue = 0;              // hue is scaled 0 to 360
+float led_saturation = 100;     // saturation is scaled 0 to 100
+float led_brightness = 33;      // brightness is scaled 0 to 100
+bool led_on = false;            // on is boolean on or off
+bool led_on_value = (bool)0;    // this is the value to write to GPIO for led on (0 = GPIO low)
+
+float fx_hue = 64;              // hue is scaled 0 to 360
+float fx_saturation = 50;       // saturation is scaled 0 to 100
+float fx_brightness = 50;       // brightness is scaled 0 to 100
+bool fx_on = true;
+
 //SSID & Passwd setup
 #include "secrets.h"
 
