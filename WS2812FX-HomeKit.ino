@@ -79,7 +79,7 @@ void setup(){
   ws2812fx.init();
   ws2812fx.setMode(FX_MODE_RAINBOW_CYCLE);
   ws2812fx.setColor(0xFF5900);
-  ws2812fx.setSpeed(10);
+  ws2812fx.setSpeed(900);
   ws2812fx.setBrightness(15);
   ws2812fx.start();
 
@@ -252,21 +252,31 @@ void updateColor()
   if(is_on)
   {
 	    ws2812fx.setSpeed(0);
-
-      int b = map(current_brightness,0, 100,75, 255);
    
       if(received_hue && received_sat)
       {
         HSV2RGB(current_hue, current_sat, current_brightness);
-		
-        uint32_t tmp = rgb_colors[2] + 255 * rgb_colors[1] + 255*255* rgb_colors[0];;
-        if(tmp <= 0xFFFFFF) {
-          ws2812fx.setColor(tmp);
-        }		
+
+        Serial.print("r= ");
+        Serial.print(rgb_colors[0]);
+        Serial.print(", g= ");
+        Serial.print(rgb_colors[1]);
+        Serial.print(", b= ");
+        Serial.println(rgb_colors[2]);
+        		
+        //uint32_t tmp = 255 * 255 * rgb_colors[0] + 255 * rgb_colors[1] + rgb_colors[2];
+        //Serial.print(", tmp = ");
+        //Serial.println(tmp);
+        //if(tmp <= 0xFFFFFF) {
+        //  ws2812fx.setColor(tmp);
+        //}
+
+        ws2812fx.setColor(rgb_colors[0],rgb_colors[1],rgb_colors[2]);
         received_hue = false;
         received_sat = false;
       }
 
+      int b = map(current_brightness,0, 100,75, 255);
       uint8_t tmp = (uint8_t) b;
       ws2812fx.setBrightness(tmp);
 
