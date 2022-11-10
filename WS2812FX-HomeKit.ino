@@ -57,7 +57,8 @@ tm tm;
 unsigned long auto_last_change = 0;
 unsigned long last_wifi_check_time = 0;
 String modes = "";
-uint8_t myModes[] = {FX_MODE_RAINBOW_CYCLE, FX_MODE_RAINBOW}; // *** optionally create a custom list of effect/mode numbers
+uint8_t myModes[] = {}; // *** optionally create a custom list of effect/mode numbers
+uint8_t myModes[] = {FX_MODE_RAINBOW_CYCLE, FX_MODE_RAINBOW};
 bool auto_cycle = false;
 
 WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
