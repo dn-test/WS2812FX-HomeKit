@@ -24,8 +24,8 @@ float current_hue = 0.0;
 
 bool fxon = true;
 float fxmode = 40;              // modes is scaled 0 to 58
-float fxsaturation = 50;       // saturation is scaled 0 to 100
 float fxspeed = 50;       
+float fxsaturation = 50;       // saturation is scaled 0 to 100
 
 
 //SSID & Passwd setup
@@ -163,6 +163,7 @@ void fx_set_bright(homekit_value_t v) {
 
     fxmode = map(fxbright,0, 100, 0, 58);
     auto_cycle = false;
+
 /*    
     if (fxspeed > 50) {
         fxspeed = fxspeed - 50;
@@ -170,6 +171,9 @@ void fx_set_bright(homekit_value_t v) {
         fxspeed = abs(fxspeed - 51);
     }
 */	
+
+    Serial.print('Mode = ');
+    Serial.println(fxmode);
     updateColor();
 }
 
@@ -177,10 +181,12 @@ void fx_set_hue(homekit_value_t v) {
     float fxhue_a = v.float_value;
     fx_hue.value.float_value = fxhue_a; //sync the valuen;
     
-    fxspeed = map(fxhue_a, 0, 100, 0, 65535);
+    fxspeed = map(fxhue_a, 0, 65535, 65535, 0);
     
     //ws2812fx.setMode(fx_hue);
-	
+
+    Serial.print('Speed = ');
+    Serial.println(fxspeed);
     updateColor();
 }
 
