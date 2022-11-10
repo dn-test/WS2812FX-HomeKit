@@ -262,21 +262,14 @@ void updateColor()
       }
       
       int b = map(current_brightness,0, 100,75, 255);
-	  
+
       uint8_t tmp = (uint8_t) b;
       WS2812FX.setBrightness(tmp);
 
-      /*uint8_t tmp = (uint8_t) strtol(server.arg(i).c_str(), NULL, 10);
-      uint8_t new_mode = sizeof(myModes) > 0 ? myModes[tmp % sizeof(myModes)] : tmp % WS2812FX.getModeCount();
-      WS2812FX.setMode(new_mode);
-      auto_cycle = false;*/
-	  
       uint8_t new_mode = sizeof(myModes) > 0 ? myModes[fx_hue % sizeof(myModes)] : fx_hue % WS2812FX.getModeCount();
       WS2812FX.setMode(new_mode);
       auto_cycle = false;
-	  
-      /*uint16_t tmp = (uint16_t) strtol(server.arg(i).c_str(), NULL, 10);
-      WS2812FX.setSpeed(tmp);*/
+
       WS2812FX.setSpeed(fx_speed*5.1);
 
     }
@@ -294,8 +287,8 @@ void my_homekit_loop() {
 	
 	const uint32_t t = millis();
 	if (t > next_heap_millis) {
-		// show heap info every 5 seconds
-		next_heap_millis = t + 5 * 1000;
+		// show heap info every 15 seconds
+		next_heap_millis = t + 15 * 1000;
 		LOG_D("Free heap: %d, HomeKit clients: %d",
 				ESP.getFreeHeap(), arduino_homekit_connected_clients_count());
 
