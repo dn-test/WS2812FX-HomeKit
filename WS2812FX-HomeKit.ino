@@ -23,7 +23,7 @@ float current_sat = 0.0;
 float current_hue = 0.0;
 
 bool fxon = true;
-float fxhue = 64;              // hue is scaled 0 to 360
+float fxmode = 40;              // modes is scaled 0 to 58
 float fxsaturation = 50;       // saturation is scaled 0 to 100
 float fxspeed = 50;       
 
@@ -149,11 +149,9 @@ void fx_set_on(homekit_value_t v) {
     
     if (fxon_a) {
         fxon = true;
-        //WS2812FX.setMode(fx_hue);
     } else {
         fxon = false;
-        //WS2812FX.setMode(0);
-        fxhue = 0;
+        fxmode = 0;
     }
 	
     updateColor();
@@ -163,31 +161,27 @@ void fx_set_bright(homekit_value_t v) {
     int fxbright = v.int_value;
     fx_bright.value.int_value = fxbright; //sync the value
 
-    fxspeed = fxbright;
-    
+    fxmode = map(fxbright,0, 100, 0, 58);
+    auto_cycle = false;
+/*    
     if (fxspeed > 50) {
         fxspeed = fxspeed - 50;
-        //ws2812fx.setSpeed(fx_speed*5.1);
-        //WS2812FX_setInverted(true);
     } else {
         fxspeed = abs(fxspeed - 51);
-        //ws2812fx.setSpeed(fx_speed*5.1);
-        //WS2812FX_setInverted(false);
     }
-	
+*/	
     updateColor();
 }
 
 void fx_set_hue(homekit_value_t v) {
     float fxhue_a = v.float_value;
-    fx_hue.value.float_value = fxhue; //sync the valuen;
+    fx_hue.value.float_value = fxhue_a; //sync the valuen;
     
-    fxhue = fxhue_a;
+    fxspeed = map(fxhue_a, 0, 100, 0, 65535);
     
     //ws2812fx.setMode(fx_hue);
 	
     updateColor();
-    auto_cycle = false;
 }
 
 void fx_set_sat(homekit_value_t v) {
@@ -256,33 +250,18 @@ void updateColor()
       if(received_hue && received_sat)
       {
         HSV2RGB(current_hue, current_sat, current_brightness);
-
-        Serial.print("r= ");
-        Serial.print(rgb_colors[0]);
-        Serial.print(", g= ");
-        Serial.print(rgb_colors[1]);
-        Serial.print(", b= ");
-        Serial.println(rgb_colors[2]);
-        		
-        //uint32_t tmp = 255 * 255 * rgb_colors[0] + 255 * rgb_colors[1] + rgb_colors[2];
-        //Serial.print(", tmp = ");
-        //Serial.println(tmp);
-        //if(tmp <= 0xFFFFFF) {
-        //  ws2812fx.setColor(tmp);
-        //}
-
         ws2812fx.setColor(rgb_colors[0],rgb_colors[1],rgb_colors[2]);
         received_hue = false;
         received_sat = false;
       }
 
-      int b = map(current_brightness,0, 100,75, 255);
+      int b = map(current_brightness,0, 100,0, 255);
       uint8_t tmp = (uint8_t) b;
       ws2812fx.setBrightness(tmp);
 
       //uint8_t new_mode = sizeof(myModes) > 0 ? myModes[ fx_hue % sizeof(myModes)] : fx_hue % ws2812fx.getModeCount();
       //ws2812fx.setMode(new_mode);
-      ws2812fx.setMode(fxhue);
+      ws2812fx.setMode(fxmode);
 
       ws2812fx.setSpeed(fxspeed*5.1);
 
