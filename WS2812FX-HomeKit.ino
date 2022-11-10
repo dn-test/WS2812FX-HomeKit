@@ -13,6 +13,7 @@
 
 #define LOG_D(fmt, ...)   printf_P(PSTR(fmt "\n") , ##__VA_ARGS__);
 
+int rgb_colors[3];
 bool received_sat = false;
 bool received_hue = false;
 
@@ -21,10 +22,11 @@ float current_brightness =  50.0;
 float current_sat = 0.0;
 float current_hue = 0.0;
 
-bool fx_on = true;
-float fx_hue = 64;              // hue is scaled 0 to 360
-float fx_saturation = 50;       // saturation is scaled 0 to 100
-float fx_speed = 50;       
+bool fxon = true;
+float fxhue = 64;              // hue is scaled 0 to 360
+float fxsaturation = 50;       // saturation is scaled 0 to 100
+float fxspeed = 50;       
+
 
 //SSID & Passwd setup
 #include "secrets.h"
@@ -58,7 +60,7 @@ unsigned long auto_last_change = 0;
 unsigned long last_wifi_check_time = 0;
 String modes = "";
 uint8_t myModes[] = {}; // *** optionally create a custom list of effect/mode numbers
-uint8_t myModes[] = {FX_MODE_RAINBOW_CYCLE, FX_MODE_RAINBOW};
+//uint8_t myModes[] = {FX_MODE_RAINBOW_CYCLE, FX_MODE_RAINBOW};
 bool auto_cycle = false;
 
 WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
@@ -77,7 +79,7 @@ void setup(){
   ws2812fx.init();
   ws2812fx.setMode(FX_MODE_RAINBOW_CYCLE);
   ws2812fx.setColor(0xFF5900);
-  ws2812fx.setSpeed(600);
+  ws2812fx.setSpeed(100);
   ws2812fx.setBrightness(30);
   ws2812fx.start();
 
@@ -98,10 +100,10 @@ void setup(){
  */
 void modes_setup() {
   modes = "";
-  uint8_t num_modes = sizeof(myModes) > 0 ? sizeof(myModes) : WS2812FX.getModeCount();
+  uint8_t num_modes = sizeof(myModes) > 0 ? sizeof(myModes) : ws2812fx.getModeCount();
   for(uint8_t i=0; i < num_modes; i++) {
     uint8_t m = sizeof(myModes) > 0 ? myModes[i] : i;
-    modes += WS2812FX.getModeName(m);
+    modes += ws2812fx.getModeName(m);
     modes += ";";
   }
 }
@@ -118,10 +120,10 @@ extern "C" homekit_characteristic_t cha_bright;
 extern "C" homekit_characteristic_t cha_sat;
 extern "C" homekit_characteristic_t cha_hue;
 
-extern "C" homekit_characteristic_t hk_fx_on;
-extern "C" homekit_characteristic_t hk_fx_bright;
-extern "C" homekit_characteristic_t hk_fx_sat;
-extern "C" homekit_characteristic_t hk_fx_hue;
+extern "C" homekit_characteristic_t fx_on;
+extern "C" homekit_characteristic_t fx_bright;
+extern "C" homekit_characteristic_t fx_sat;
+extern "C" homekit_characteristic_t fx_hue;
 
 static uint32_t next_heap_millis = 0;
 
@@ -132,26 +134,26 @@ void my_homekit_setup() {
   cha_sat.setter = set_sat;
   cha_hue.setter = set_hue;
   
-  hk_fx_on.setter = fx_set_on;
-  hk_fx_bright.setter = fx_set_bright;
-  hk_fx_sat.setter = fx_set_sat;
-  hk_fx_hue.setter = fx_set_hue;
+  fx_on.setter = fx_set_on;
+  fx_bright.setter = fx_set_bright;
+  fx_sat.setter = fx_set_sat;
+  fx_hue.setter = fx_set_hue;
   
   arduino_homekit_setup(&accessory_config);
 
 }
 
 void fx_set_on(homekit_value_t v) {
-    bool fxon = v.bool_value;
-    hk_fx_on.value.bool_value = fxon; //sync the value
+    bool fxon_a = v.bool_value;
+    fx_on.value.bool_value = fxon_a; //sync the value
     
-    if (fxon) {
-        fx_on = true;
+    if (fxon_a) {
+        fxon = true;
         //WS2812FX.setMode(fx_hue);
     } else {
-        fx_on = false;
+        fxon = false;
         //WS2812FX.setMode(0);
-        fx_hue = 0;
+        fxhue = 0;
     }
 	
     updateColor();
@@ -159,17 +161,17 @@ void fx_set_on(homekit_value_t v) {
 
 void fx_set_bright(homekit_value_t v) {
     int fxbright = v.int_value;
-    hk_fx_bright.value.int_value = fxbright; //sync the value
+    fx_bright.value.int_value = fxbright; //sync the value
 
-    fx_speed = fxbright;
+    fxspeed = fxbright;
     
-    if (fxbright > 50) {
-        fx_speed = fxbright - 50;
-        //WS2812FX.setSpeed(fx_speed*5.1);
+    if (fxspeed > 50) {
+        fxspeed = fxspeed - 50;
+        //ws2812fx.setSpeed(fx_speed*5.1);
         //WS2812FX_setInverted(true);
     } else {
-        fx_speed = abs(fxbright - 51);
-        //WS2812FX.setSpeed(fx_speed*5.1);
+        fxspeed = abs(fxspeed - 51);
+        //ws2812fx.setSpeed(fx_speed*5.1);
         //WS2812FX_setInverted(false);
     }
 	
@@ -177,21 +179,22 @@ void fx_set_bright(homekit_value_t v) {
 }
 
 void fx_set_hue(homekit_value_t v) {
-    float fxhue = v.float_value;
-    hk_fx_hue.value.float_value = fxhue; //sync the valuen;
+    float fxhue_a = v.float_value;
+    fx_hue.value.float_value = fxhue; //sync the valuen;
     
-    fx_hue = fxhue;
+    fxhue = fxhue_a;
     
-    //WS2812FX.setMode(fx_hue);
+    //ws2812fx.setMode(fx_hue);
 	
     updateColor();
+    auto_cycle = false;
 }
 
 void fx_set_sat(homekit_value_t v) {
     float fxsat = v.float_value;
-    hk_fx_sat.value.float_value = fxsat; //sync the value
+    fx_sat.value.float_value = fxsat; //sync the value
     
-    fx_saturation = fxsat;
+    fxsaturation = fxsat;
     
     updateColor();
 }
@@ -248,38 +251,38 @@ void updateColor()
 {
   if(is_on)
   {
-	  WS2812FX.setSpeed(0);
+	    ws2812fx.setSpeed(0);
+
+      int b = map(current_brightness,0, 100,75, 255);
    
       if(received_hue && received_sat)
       {
-        //HSV2RGB(current_hue, current_sat, current_brightness);
+        HSV2RGB(current_hue, current_sat, current_brightness);
 		
-        uint32_t tmp = (uint32_t) current_hue;
+        uint32_t tmp = (uint32_t) rgb_colors;
         if(tmp <= 0xFFFFFF) {
-          WS2812FX.setColor(tmp);
+          ws2812fx.setColor(tmp);
         }		
         received_hue = false;
         received_sat = false;
       }
-      
-      int b = map(current_brightness,0, 100,75, 255);
 
       uint8_t tmp = (uint8_t) b;
-      WS2812FX.setBrightness(tmp);
+      ws2812fx.setBrightness(tmp);
 
-      uint8_t new_mode = sizeof(myModes) > 0 ? myModes[fx_hue % sizeof(myModes)] : fx_hue % WS2812FX.getModeCount();
-      WS2812FX.setMode(new_mode);
-      auto_cycle = false;
+      //uint8_t new_mode = sizeof(myModes) > 0 ? myModes[ fx_hue % sizeof(myModes)] : fx_hue % ws2812fx.getModeCount();
+      //ws2812fx.setMode(new_mode);
+      ws2812fx.setMode(fxhue);
 
-      WS2812FX.setSpeed(fx_speed*5.1);
+      ws2812fx.setSpeed(fxspeed*5.1);
 
     }
   else if(!is_on) //lamp - switch to off
   {
       Serial.println("is_on == false");
 	  
-      WS2812FX.setBrightness(0);
-      WS2812FX.setColor(0x000000);
+      ws2812fx.setBrightness(0);
+      ws2812fx.setColor(0x000000);
   }
 }
 
@@ -401,4 +404,68 @@ void wifi_setup() {
 
   IntLedState = HIGH || time_check();
   digitalWrite(INT_LED_PIN, IntLedState);
+}
+
+void HSV2RGB(float h,float s,float v) {
+
+  int i;
+  float m, n, f;
+
+  s/=100;
+  v/=100;
+
+  if(s==0){
+    rgb_colors[0]=rgb_colors[1]=rgb_colors[2]=round(v*255);
+    return;
+  }
+
+  h/=60;
+  i=floor(h);
+  f=h-i;
+
+  if(!(i&1)){
+    f=1-f;
+  }
+
+  m=v*(1-s);
+  n=v*(1-s*f);
+
+  switch (i) {
+
+    case 0: case 6:
+      rgb_colors[0]=round(v*255);
+      rgb_colors[1]=round(n*255);
+      rgb_colors[2]=round(m*255);
+    break;
+
+    case 1:
+      rgb_colors[0]=round(n*255);
+      rgb_colors[1]=round(v*255);
+      rgb_colors[2]=round(m*255);
+    break;
+
+    case 2:
+      rgb_colors[0]=round(m*255);
+      rgb_colors[1]=round(v*255);
+      rgb_colors[2]=round(n*255);
+    break;
+
+    case 3:
+      rgb_colors[0]=round(m*255);
+      rgb_colors[1]=round(n*255);
+      rgb_colors[2]=round(v*255);
+    break;
+
+    case 4:
+      rgb_colors[0]=round(n*255);
+      rgb_colors[1]=round(m*255);
+      rgb_colors[2]=round(v*255);
+    break;
+
+    case 5:
+      rgb_colors[0]=round(v*255);
+      rgb_colors[1]=round(m*255);
+      rgb_colors[2]=round(n*255);
+    break;
+  }
 }
