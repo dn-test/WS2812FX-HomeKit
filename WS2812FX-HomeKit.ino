@@ -24,7 +24,7 @@ float current_hue = 0.0;
 bool fx_on = true;
 float fx_hue = 64;              // hue is scaled 0 to 360
 float fx_saturation = 50;       // saturation is scaled 0 to 100
-float fx_brightness = 50;       // brightness is scaled 0 to 100
+float fx_speed = 50;       
 
 //SSID & Passwd setup
 #include "secrets.h"
@@ -117,10 +117,10 @@ extern "C" homekit_characteristic_t cha_bright;
 extern "C" homekit_characteristic_t cha_sat;
 extern "C" homekit_characteristic_t cha_hue;
 
-extern "C" homekit_characteristic_t fx_on;
-extern "C" homekit_characteristic_t fx_bright;
-extern "C" homekit_characteristic_t fx_sat;
-extern "C" homekit_characteristic_t fx_hue;
+extern "C" homekit_characteristic_t hk_fx_on;
+extern "C" homekit_characteristic_t hk_fx_bright;
+extern "C" homekit_characteristic_t hk_fx_sat;
+extern "C" homekit_characteristic_t hk_fx_hue;
 
 static uint32_t next_heap_millis = 0;
 
@@ -131,45 +131,43 @@ void my_homekit_setup() {
   cha_sat.setter = set_sat;
   cha_hue.setter = set_hue;
   
-  fx_on.setter = fx_set_on;
-  fx_bright.setter = fx_set_bright;
-  fx_sat.setter = fx_set_sat;
-  fx_hue.setter = fx_set_hue;
+  hk_fx_on.setter = fx_set_on;
+  hk_fx_bright.setter = fx_set_bright;
+  hk_fx_sat.setter = fx_set_sat;
+  hk_fx_hue.setter = fx_set_hue;
   
   arduino_homekit_setup(&accessory_config);
 
 }
 
-void fx_on_set(homekit_value_t value) {
-    if (value.format != homekit_format_bool) {
-        // printf("Invalid on-value format: %d\n", value.format);
-        return;
-    }
-    fx_on = value.bool_value;
+void fx_set_on(homekit_value_t v) {
+    bool fxon = v.bool_value;
+    hk_fx_on.value.bool_value = fxon; //sync the value
     
-    if (fx_on) {
+    if (fxon) {
+        fx_on = true;
         //WS2812FX.setMode(fx_hue);
     } else {
+        fx_on = false;
         //WS2812FX.setMode(0);
-		fx_hue = 0;
+        fx_hue = 0;
     }
 	
     updateColor();
 }
 
-void fx_set_bright(homekit_value_t value) {
-    if (value.format != homekit_format_int) {
-        // printf("Invalid brightness-value format: %d\n", value.format);
-        return;
-    }
-    fx_brightness = value.int_value;
+void fx_set_bright(homekit_value_t v) {
+    int fxbright = v.int_value;
+    hk_fx_bright.value.int_value = fxbright; //sync the value
+
+    fx_speed = fxbright;
     
-    if (fx_brightness > 50) {
-        uint8_t fx_speed = fx_brightness - 50;
+    if (fxbright > 50) {
+        fx_speed = fxbright - 50;
         //WS2812FX.setSpeed(fx_speed*5.1);
         //WS2812FX_setInverted(true);
     } else {
-        uint8_t fx_speed = abs(fx_brightness - 51);
+        fx_speed = abs(fxbright - 51);
         //WS2812FX.setSpeed(fx_speed*5.1);
         //WS2812FX_setInverted(false);
     }
@@ -177,27 +175,25 @@ void fx_set_bright(homekit_value_t value) {
     updateColor();
 }
 
-void fx_set_hue(homekit_value_t value) {
-    if (value.format != homekit_format_float) {
-        // printf("Invalid hue-value format: %d\n", value.format);
-        return;
-    }
-    fx_hue = value.float_value;
+void fx_set_hue(homekit_value_t v) {
+    float fxhue = v.float_value;
+    hk_fx_hue.value.float_value = fxhue; //sync the valuen;
+    
+    fx_hue = fxhue;
     
     //WS2812FX.setMode(fx_hue);
 	
     updateColor();
 }
 
-void fx_set_sat(homekit_value_t value) {
-    if (value.format != homekit_format_float) {
-        // printf("Invalid hue-value format: %d\n", value.format);
-        return;
-    }
-    fx_saturation = value.float_value;
+void fx_set_sat(homekit_value_t v) {
+    float fxsat = v.float_value;
+    hk_fx_sat.value.float_value = fxsat; //sync the value
+    
+    fx_saturation = fxsat;
+    
     updateColor();
 }
-
 
 
 void set_on(const homekit_value_t v) {
@@ -267,7 +263,7 @@ void updateColor()
       
       int b = map(current_brightness,0, 100,75, 255);
 	  
-	  uint8_t tmp = (uint8_t) b;
+      uint8_t tmp = (uint8_t) b;
       WS2812FX.setBrightness(tmp);
 
       /*uint8_t tmp = (uint8_t) strtol(server.arg(i).c_str(), NULL, 10);
@@ -288,7 +284,7 @@ void updateColor()
   {
       Serial.println("is_on == false");
 	  
-	  WS2812FX.setBrightness(0);
+      WS2812FX.setBrightness(0);
       WS2812FX.setColor(0x000000);
   }
 }
