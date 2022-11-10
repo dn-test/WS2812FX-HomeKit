@@ -79,8 +79,8 @@ void setup(){
   ws2812fx.init();
   ws2812fx.setMode(FX_MODE_RAINBOW_CYCLE);
   ws2812fx.setColor(0xFF5900);
-  ws2812fx.setSpeed(100);
-  ws2812fx.setBrightness(30);
+  ws2812fx.setSpeed(10);
+  ws2812fx.setBrightness(15);
   ws2812fx.start();
 
   pinMode(INT_LED_PIN, OUTPUT);
@@ -259,7 +259,7 @@ void updateColor()
       {
         HSV2RGB(current_hue, current_sat, current_brightness);
 		
-        uint32_t tmp = (uint32_t) rgb_colors;
+        uint32_t tmp = rgb_colors[2] + 255 * rgb_colors[1] + 255*255* rgb_colors[0];;
         if(tmp <= 0xFFFFFF) {
           ws2812fx.setColor(tmp);
         }		
